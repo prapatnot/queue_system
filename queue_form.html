@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <h2>📋 จองคิววันนี้</h2>
+  <h2>📋 Queue Management System</h2>
   <form id="queueForm">
     <input type="text" name="name" placeholder="ชื่อของคุณ" required />
     <input type="tel" name="phone" placeholder="เบอร์โทรศัพท์" required pattern="[0-9]{9,10}" />
@@ -41,7 +41,7 @@
     let userId = '';
 
     async function initLiff() {
-      await liff.init({ liffId: "ใส่-LIFF-ID-ของคุณตรงนี้" });
+      await liff.init({ liffId: "https://liff.line.me/2007684982-PW790WXz" });
       if (!liff.isLoggedIn()) {
         liff.login();
       } else {
