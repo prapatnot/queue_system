@@ -96,13 +96,12 @@
     let lineUserId = "";
 
     async function initLiff() {
-      await liff.init({ liffId: "2007684982-PW790WXz" });
+      await liff.init({ liffId: "2007684982-PW790WXz" }); // ใช้ LIFF ID ของคุณ
       if (!liff.isLoggedIn()) {
         liff.login();
       } else {
         const profile = await liff.getProfile();
         lineUserId = profile.userId;
-        console.log("LINE User ID:", lineUserId);
       }
     }
 
@@ -110,6 +109,7 @@
       try {
         await initLiff();
       } catch (err) {
+        console.error("LIFF Initialization failed", err);
         alert("เกิดปัญหาในการโหลด LIFF: " + err);
       }
     };
@@ -118,7 +118,7 @@
       e.preventDefault();
 
       if (!lineUserId) {
-        alert("ยังไม่ได้รับข้อมูล LINE ID กรุณาลองใหม่");
+        alert("ยังไม่ได้รับข้อมูล LINE ID กรุณาลองใหม่อีกครั้ง");
         return;
       }
 
@@ -128,21 +128,29 @@
         person_count: document.getElementById("person_count").value,
         lineUserId: lineUserId
       };
+      
+      // URL ของ Web App ที่ได้จากการ Deploy ในขั้นตอนที่ 3
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgCWzvIIRSGDW37QDN85ZrRGvdH-I1IUHxaIUFglfE8Ejicy7vjQL3dxW2PJ0FwVQ0/exec"; 
 
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbzvY_t9MfG_NjXOh8kb0qxqAaWMMK5f8JePLbYWrPkC2DEzqGbupmhm_lWy9U0nP3ehOQ/exec", {
+        const res = await fetch(WEB_APP_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          // ไม่ต้องกำหนด Content-Type หรือใช้ text/plain ก็ได้
+          // Google Apps Script จะรับเป็น e.postData.contents ได้เลย
           body: JSON.stringify(data)
         });
 
-        if (res.ok) {
+        const result = await res.json();
+
+        if (result.status === "success") {
           alert("ส่งคำจองเรียบร้อย กรุณารอการยืนยันจากร้าน");
           liff.closeWindow();
         } else {
-          alert("ส่งข้อมูลไม่สำเร็จ (" + res.status + ")");
+          // แสดง error message ที่ส่งมาจาก Apps Script
+          alert("ส่งข้อมูลไม่สำเร็จ: " + result.message);
         }
       } catch (err) {
+        console.error("Fetch failed", err);
         alert("ส่งข้อมูลล้มเหลว: " + err);
       }
     });
