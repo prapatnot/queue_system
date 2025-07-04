@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -101,11 +102,26 @@
       } else {
         const profile = await liff.getProfile();
         lineUserId = profile.userId;
+        console.log("LINE User ID:", lineUserId);
       }
     }
 
+    window.onload = async () => {
+      try {
+        await initLiff();
+      } catch (err) {
+        alert("เกิดปัญหาในการโหลด LIFF: " + err);
+      }
+    };
+
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (!lineUserId) {
+        alert("ยังไม่ได้รับข้อมูล LINE ID กรุณาลองใหม่");
+        return;
+      }
+
       const data = {
         name: document.getElementById("name").value,
         phone: document.getElementById("phone").value,
@@ -113,21 +129,23 @@
         lineUserId: lineUserId
       };
 
-      const res = await fetch("https://script.google.com/macros/s/AKfycbxaYC5rWM8YUdav3UlJplPodRdVIzgET-in-XfRzq2amtj15Y1-QxszZv3amW-utghDZw/exec", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxaYC5rWM8YUdav3UlJplPodRdVIzgET-in-XfRzq2amtj15Y1-QxszZv3amW-utghDZw/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
 
-      if (res.ok) {
-        alert("ส่งคำจองเรียบร้อย กรุณารอการยืนยันจากร้าน");
-        liff.closeWindow();
-      } else {
-        alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+        if (res.ok) {
+          alert("ส่งคำจองเรียบร้อย กรุณารอการยืนยันจากร้าน");
+          liff.closeWindow();
+        } else {
+          alert("ส่งข้อมูลไม่สำเร็จ (" + res.status + ")");
+        }
+      } catch (err) {
+        alert("ส่งข้อมูลล้มเหลว: " + err);
       }
     });
-
-    initLiff();
   </script>
 </body>
 </html>
