@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ดึง LINE User ID พนักงาน</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.1em;
+            color: #555;
+        }
+        #userIdDisplay {
+            background-color: #e6e6e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 1.2em;
+            word-break: break-all; /* สำหรับข้อความยาวๆ */
+            color: #000;
+            font-weight: bold;
+        }
+        button {
+            background-color: #00B900; /* LINE Green */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #009900;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LINE User ID ของคุณ</h1>
+        <p>กรุณาคัดลอก User ID ด้านล่างนี้ส่งให้ผู้ดูแลระบบ</p>
+        <div id="userIdDisplay">กำลังโหลด...</div>
+        <button onclick="copyUserId()">คัดลอก ID</button>
+        <p style="margin-top: 20px; font-size: 0.9em; color: #777;">หากไม่เห็น ID กรุณาลองใหม่ หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</p>
+    </div>
+
+    <script>
+        let staffLineUserId = ""; // เก็บ userId ที่ดึงได้
+
+        async function initLiff() {
+            try {
+                await liff.init({ liffId: "2007684982-YdG9P4vR" }); // *** แทนที่ด้วย LIFF ID ที่สร้างใหม่สำหรับพนักงาน ***
+
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    const profile = await liff.getProfile();
+                    staffLineUserId = profile.userId;
+                    document.getElementById("userIdDisplay").innerText = staffLineUserId;
+                }
+            } catch (err) {
+                console.error("LIFF Initialization failed", err);
+                document.getElementById("userIdDisplay").innerText = "เกิดข้อผิดพลาดในการโหลด ID: " + err.message;
+                alert("เกิดข้อผิดพลาดในการโหลด LIFF: " + err.message);
+            }
+        }
+
+        function copyUserId() {
+            if (staffLineUserId) {
+                navigator.clipboard.writeText(staffLineUserId).then(() => {
+                    alert("คัดลอก User ID เรียบร้อย!");
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert("ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง: " + staffLineUserId);
+                });
+            } else {
+                alert("ยังไม่มี User ID ให้คัดลอก");
+            }
+        }
+
+        window.onload = initLiff;
+    </script>
+</body>
+</html>
