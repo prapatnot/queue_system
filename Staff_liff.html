@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ดึง LINE User ID พนักงาน</title>
+    <title>บันทึกข้อมูลพนักงาน</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body {
@@ -33,15 +33,15 @@
             font-size: 1.1em;
             color: #555;
         }
-        #userIdDisplay {
+        #infoDisplay {
             background-color: #e6e6e6;
             padding: 15px;
             border-radius: 5px;
             margin-top: 20px;
-            font-size: 1.2em;
-            word-break: break-all; /* สำหรับข้อความยาวๆ */
+            font-size: 1.1em;
+            word-break: break-all;
             color: #000;
-            font-weight: bold;
+            text-align: left;
         }
         button {
             background-color: #00B900; /* LINE Green */
@@ -56,48 +56,112 @@
         button:hover {
             background-color: #009900;
         }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #00B900;
+            animation: spin 1s ease infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>LINE User ID ของคุณ</h1>
-        <p>กรุณาคัดลอก User ID ด้านล่างนี้ส่งให้ผู้ดูแลระบบ</p>
-        <div id="userIdDisplay">กำลังโหลด...</div>
-        <button onclick="copyUserId()">คัดลอก ID</button>
-        <p style="margin-top: 20px; font-size: 0.9em; color: #777;">หากไม่เห็น ID กรุณาลองใหม่ หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</p>
+        <h1>บันทึกข้อมูลพนักงาน</h1>
+        <p>คุณจะบันทึก LINE ID และชื่อ Display Name ของคุณลงในระบบ</p>
+        <div id="infoDisplay">
+            <p><strong>ชื่อ Display Name:</strong> <span id="displayName">กำลังโหลด...</span></p>
+            <p><strong>LINE User ID:</strong> <span id="userId">กำลังโหลด...</span></p>
+        </div>
+        <div id="loadingSpinner" class="spinner"></div>
+        <button id="saveButton" onclick="saveStaffData()" style="display: none;">บันทึกข้อมูลพนักงาน</button>
+        <p id="statusMessage" style="margin-top: 20px; font-weight: bold;"></p>
+        <p style="margin-top: 20px; font-size: 0.9em; color: #777;">โปรดตรวจสอบข้อมูลก่อนบันทึก</p>
     </div>
 
     <script>
-        let staffLineUserId = ""; // เก็บ userId ที่ดึงได้
+        let staffLineUserId = "";
+        let staffDisplayName = "";
+        // *** สำคัญ: ต้องเป็น URL เดียวกันกับ Web App ของ Google Apps Script ของคุณ ***
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlHcWKtlH1_JYjo8uyWw1TAHfdBLon_HZ4Lf_qEywO9b4_sMt9Vls2yOOa2THzxNxBZw/exec";
 
         async function initLiff() {
             try {
-                await liff.init({ liffId: "2007684982-YdG9P4vR" }); // *** แทนที่ด้วย LIFF ID ที่สร้างใหม่สำหรับพนักงาน ***
+                // *** สำคัญ: แทนที่ด้วย LIFF ID ที่สร้างใหม่สำหรับพนักงาน ***
+                await liff.init({ liffId: "YOUR_NEW_STAFF_LIFF_ID" }); 
 
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
                     const profile = await liff.getProfile();
                     staffLineUserId = profile.userId;
-                    document.getElementById("userIdDisplay").innerText = staffLineUserId;
+                    staffDisplayName = profile.displayName;
+
+                    document.getElementById("displayName").innerText = staffDisplayName;
+                    document.getElementById("userId").innerText = staffLineUserId;
+                    document.getElementById("saveButton").style.display = "block"; // Show button after loading data
                 }
             } catch (err) {
                 console.error("LIFF Initialization failed", err);
-                document.getElementById("userIdDisplay").innerText = "เกิดข้อผิดพลาดในการโหลด ID: " + err.message;
+                document.getElementById("statusMessage").innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err.message;
                 alert("เกิดข้อผิดพลาดในการโหลด LIFF: " + err.message);
+            } finally {
+                document.getElementById("loadingSpinner").style.display = "none"; // Hide spinner
             }
         }
 
-        function copyUserId() {
-            if (staffLineUserId) {
-                navigator.clipboard.writeText(staffLineUserId).then(() => {
-                    alert("คัดลอก User ID เรียบร้อย!");
-                }).catch(err => {
-                    console.error('Failed to copy: ', err);
-                    alert("ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง: " + staffLineUserId);
+        async function saveStaffData() {
+            if (!staffLineUserId) {
+                document.getElementById("statusMessage").innerText = "ยังไม่มีข้อมูล LINE ID กรุณาลองใหม่อีกครั้ง";
+                return;
+            }
+
+            document.getElementById("saveButton").disabled = true;
+            document.getElementById("loadingSpinner").style.display = "block";
+            document.getElementById("statusMessage").innerText = "กำลังบันทึกข้อมูล...";
+
+            const dataToSend = {
+                action: "registerStaff", // ระบุว่าเป็นการดำเนินการลงทะเบียนพนักงาน
+                userId: staffLineUserId,
+                displayName: staffDisplayName
+            };
+
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataToSend)
                 });
-            } else {
-                alert("ยังไม่มี User ID ให้คัดลอก");
+
+                const result = await res.json();
+
+                if (result.status === "success") {
+                    document.getElementById("statusMessage").style.color = "green";
+                    document.getElementById("statusMessage").innerText = "บันทึกข้อมูลพนักงานสำเร็จ!";
+                    // สามารถปิด LIFF ได้เลยหลังจากบันทึกสำเร็จ
+                    setTimeout(() => {
+                        liff.closeWindow();
+                    }, 2000);
+                } else {
+                    document.getElementById("statusMessage").style.color = "red";
+                    document.getElementById("statusMessage").innerText = "บันทึกข้อมูลไม่สำเร็จ: " + result.message;
+                }
+            } catch (err) {
+                console.error("Error saving staff data:", err);
+                document.getElementById("statusMessage").style.color = "red";
+                document.getElementById("statusMessage").innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err.message;
+            } finally {
+                document.getElementById("saveButton").disabled = false;
+                document.getElementById("loadingSpinner").style.display = "none";
             }
         }
 
