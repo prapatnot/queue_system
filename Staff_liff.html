@@ -134,12 +134,10 @@
 
             try {
                 const res = await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dataToSend)
-                });
+    method: "POST",
+    // ลบ headers: { 'Content-Type': 'application/json' } ออกจากตรงนี้
+    body: JSON.stringify(dataToSend)
+});
 
                 const result = await res.json();
 
