@@ -87,8 +87,7 @@
       <input type="text" id="name" placeholder="ชื่อ - นามสกุล" required>
       <input type="tel" id="phone" placeholder="เบอร์โทรศัพท์" pattern="[0-9]{9,10}" required>
       <input type="number" id="person_count" placeholder="จำนวนคน" min="1" max="50" required>
-      <input type="time" id="booking_time" required>
-      <button type="submit">ส่งคำจอง</button>
+       <button type="submit">ส่งคำจอง</button>
     </form>
   </div>
 
@@ -111,7 +110,6 @@
         name: document.getElementById("name").value,
         phone: document.getElementById("phone").value,
         person_count: document.getElementById("person_count").value,
-        time: document.getElementById("booking_time").value,
         lineUserId: lineUserId
       };
 
