@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -78,9 +77,36 @@
         font-size: 16px;
       }
     }
+
+    /* 🚨 Loading Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .overlay span {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      font-size: 18px;
+      color: #333;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
+  <div class="overlay" id="loadingOverlay">
+    <span>Please wait...</span>
+  </div>
+
   <div class="container">
     <img src="logo.jpg" class="logo" alt="โลโก้ร้าน">
     <h2>จองคิวร้านอาหาร</h2>
@@ -96,13 +122,21 @@
     let lineUserId = "";
 
     async function initLiff() {
-      await liff.init({ liffId: "2007684982-PW790WXz" }); // ใช้ LIFF ID ของคุณ
+      await liff.init({ liffId: "2007684982-PW790WXz" }); 
       if (!liff.isLoggedIn()) {
         liff.login();
       } else {
         const profile = await liff.getProfile();
         lineUserId = profile.userId;
       }
+    }
+
+    function showOverlay() {
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+
+    function hideOverlay() {
+      document.getElementById("loadingOverlay").style.display = "none";
     }
 
     window.onload = async () => {
@@ -122,6 +156,8 @@
         return;
       }
 
+      showOverlay(); // 👉 แสดง loading ก่อนส่งข้อมูล
+
       const data = {
         name: document.getElementById("name").value,
         phone: document.getElementById("phone").value,
@@ -129,14 +165,11 @@
         lineUserId: lineUserId
       };
       
-      // URL ของ Web App ที่ได้จากการ Deploy ในขั้นตอนที่ 3
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlHcWKtlH1_JYjo8uyWw1TAHfdBLon_HZ4Lf_qEywO9b4_sMt9Vls2yOOa2THzxNxBZw/exec"; 
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgCWzvIIRSGDW37QDN85ZrRGvdH-I1IUHxaIUFglfE8Ejicy7vjQL3dxW2PJ0FwVQ0/exec"; 
 
       try {
         const res = await fetch(WEB_APP_URL, {
           method: "POST",
-          // ไม่ต้องกำหนด Content-Type หรือใช้ text/plain ก็ได้
-          // Google Apps Script จะรับเป็น e.postData.contents ได้เลย
           body: JSON.stringify(data)
         });
 
@@ -146,12 +179,13 @@
           alert("ส่งคำจองเรียบร้อย กรุณารอการยืนยันจากร้าน");
           liff.closeWindow();
         } else {
-          // แสดง error message ที่ส่งมาจาก Apps Script
           alert("ส่งข้อมูลไม่สำเร็จ: " + result.message);
         }
       } catch (err) {
         console.error("Fetch failed", err);
         alert("ส่งข้อมูลล้มเหลว: " + err);
+      } finally {
+        hideOverlay(); // 👉 ซ่อน overlay ไม่ว่าผลจะเป็นอะไร
       }
     });
   </script>
